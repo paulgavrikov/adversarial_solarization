@@ -1,51 +1,19 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import torch.utils.data
-import torchvision
-import timm
 import kornia
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 import argparse
-
-
-class NormalizedModel(torch.nn.Module):
-
-    def __init__(self, model, mean, std):
-        super(NormalizedModel, self).__init__()
-        self.model = model
-        self.mean = torch.nn.Parameter(torch.Tensor(mean).view(-1, 1, 1), requires_grad=False)
-        self.std = torch.nn.Parameter(torch.Tensor(std).view(-1, 1, 1), requires_grad=False)
-
-    def forward(self, x):
-        out = (x - self.mean) / self.std 
-        out = self.model(out)
-        return out
+from utils import get_normalized_model, get_imagenet_loader
 
 
 def main(args):
-    dataset = torchvision.datasets.ImageNet(args.imagenet, 
-                                            split="val", 
-                                            transform=torchvision.transforms.Compose(
-                                                [
-                                                    torchvision.transforms.Resize(256), 
-                                                    torchvision.transforms.CenterCrop(224), 
-                                                    torchvision.transforms.ToTensor()
-                                                ]
-                                            )
-                                           )
-
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=16)
+    dataloader = get_imagenet_loader(path=args.imagenet, batch_size=args.batch_size, num_workers=16)
 
     device = args.device
 
-    model_name = args.model
-
-    model = timm.create_model(model_name, pretrained=True)
-    model = NormalizedModel(model, model.default_cfg.get("mean"), model.default_cfg.get("std"))
+    model = get_normalized_model(args.model)    
     model = torch.nn.DataParallel(model)
-
     model.to(device)
     model.eval()
 
@@ -68,7 +36,7 @@ def main(args):
             acc = correct / total
             accs.append(acc)
 
-    np.save(f"output/static_imagenet_{model_name}.npy", np.array(accs))
+    np.save(f"output/static_imagenet_{args.model}.npy", np.array(accs))
 
 
 if __name__ == '__main__':
