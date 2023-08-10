@@ -14,11 +14,11 @@ except:
 
 
 CORRUPTIONS = [
-    'gaussian_noise', 'shot_noise', 'impulse_noise',
-    'defocus_blur', 'glass_blur', 'motion_blur', 'zoom_blur',
-    'snow', 'frost', 'fog', 'brightness',
-    'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression',
-    'speckle_noise', 'gaussian_blur', 'spatter', 'saturate'
+    'gaussian_noise', 'shot_noise', 'impulse_noise', # noise
+    'defocus_blur', 'glass_blur', 'motion_blur', 'zoom_blur', # blur
+    'snow', 'frost', 'fog', 'brightness', # weather
+    'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression', # digital
+    'speckle_noise', 'gaussian_blur', 'spatter', 'saturate' # extra
 ]
 
 SEVERITIES = [1, 2, 3, 4, 5]
@@ -28,7 +28,7 @@ def get_loader(path, batch_size, num_workers):
     dataset = torchvision.datasets.ImageFolder(path, 
                                                 transform=torchvision.transforms.Compose(
                                                     [
-                                                        torchvision.transforms.Resize(256), 
+                                                        torchvision.transforms.Resize(256), # Hendrycks et al. did not resize
                                                         torchvision.transforms.CenterCrop(224), 
                                                         torchvision.transforms.ToTensor()
                                                     ]
@@ -72,6 +72,9 @@ def main(args):
                 for x, y in tqdm(dataloader, desc=f"({tests}/{len(CORRUPTIONS) * len(SEVERITIES)}) {corruption}/{severity}"):
                     bx = x.to(device)
                     by = y.to(device)
+
+                    # assert that bx is not normalized by mean and std
+                    assert torch.all(bx >= 0) and torch.all(bx <= 1), "Data must be in [0, 1] range"
 
                     logits = model(bx)
                     is_correct = (logits.argmax(dim=1) == by).detach()
