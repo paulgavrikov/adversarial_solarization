@@ -27,6 +27,9 @@ def main(args):
                 x = x.to(device)
                 y = y.to(device)
 
+                # assert that bx is not normalized by mean and std
+                assert torch.all(x >= 0) and torch.all(x <= 1), "Data must be in [0, 1] range"
+
                 x_aug = kornia.enhance.solarize(x, torch.tensor(alpha).float().to(device))
 
                 logits = model(x_aug)

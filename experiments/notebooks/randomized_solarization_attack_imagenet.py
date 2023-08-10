@@ -26,6 +26,9 @@ def main(args):
             bx = x.to(device)
             by = y.to(device)
 
+            # assert that bx is not normalized by mean and std
+            assert torch.all(bx >= 0) and torch.all(bx <= 1), "Data must be in [0, 1] range"
+
             a = torch.empty(len(by))
             is_correct = torch.ones(len(by)).bool().to(device)
 
