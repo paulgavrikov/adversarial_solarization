@@ -29,8 +29,7 @@ def main(args):
             top1_meter.update(top1.item(), bx.size(0))
             top5_meter.update(top5.item(), bx.size(0))
 
-    print(f"Accuracy top1: {top1_meter.avg * 100:.2f} %, top5: {top5_meter.avg * 100:.2f} %")
-
+    print(f"Accuracy top1: {top1_meter.avg:.2f}%, top5: {top5_meter.avg:.2f}%")
 
 
 if __name__ == '__main__':
