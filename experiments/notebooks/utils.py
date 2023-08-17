@@ -45,7 +45,7 @@ def get_normalized_model(model_name):
     return model
 
 
-def get_imagenet_loader(path, batch_size, num_workers):
+def get_imagenet_loader(path, batch_size, num_workers, shuffle=False):
     dataset = torchvision.datasets.ImageNet(path, 
                                             split="val", 
                                             transform=torchvision.transforms.Compose(
@@ -57,7 +57,7 @@ def get_imagenet_loader(path, batch_size, num_workers):
                                             )
                                            )
 
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=num_workers)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=num_workers)
 
     return dataloader
 
@@ -78,7 +78,8 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-    
+
+
 class AverageMeter():
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -95,3 +96,12 @@ class AverageMeter():
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+def seed_everything(seed):
+    torch.manual_seed(seed)
+
+    import random
+    import numpy as np
+
+    random.seed(seed)
+    np.random.seed(seed)
