@@ -5,7 +5,7 @@ import kornia
 from tqdm import tqdm
 import numpy as np
 import argparse
-from utils import get_normalized_model, get_imagenet_loader
+from utils import get_normalized_model, get_imagenet_loader, accuracy, AverageMeter
 
 
 def main(args):
@@ -17,8 +17,8 @@ def main(args):
     model = get_normalized_model(args.model)
     model.to(device)
 
-    correct = 0
-    total = 0
+    top1_meter = AverageMeter()
+    top5_meter = AverageMeter()
 
     with torch.no_grad():
 
@@ -39,10 +39,11 @@ def main(args):
                 logits = model(x_aug)
                 is_correct.data = (logits.argmax(dim=1) == by).detach()
 
-            correct += is_correct.float().sum().item()
-            total += len(by)
+            top1, top5 = accuracy(logits, by, topk=(1, 5))
+            top1_meter.update(top1.item(), bx.size(0))
+            top5_meter.update(top5.item(), bx.size(0))
         
-    print(f"{(correct / total) * 100:.2f}")
+    print(f"Robust accuracy top1: {top1_meter.avg * 100:.2f} %, top5: {top5_meter.avg * 100:.2f} %")
 
 
 if __name__ == '__main__':
