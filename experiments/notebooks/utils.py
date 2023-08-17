@@ -105,3 +105,7 @@ def seed_everything(seed):
 
     random.seed(seed)
     np.random.seed(seed)
+
+
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1", "y")

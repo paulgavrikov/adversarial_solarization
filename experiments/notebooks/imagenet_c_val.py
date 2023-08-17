@@ -4,7 +4,7 @@ from tqdm import tqdm
 import argparse
 import torchvision
 from torch.utils.data import DataLoader
-from utils import get_normalized_model
+from utils import get_normalized_model, accuracy, AverageMeter, str2bool
 import os
 try:
     import wandb
@@ -43,7 +43,7 @@ def get_loader(path, batch_size, num_workers):
 def main(args):
 
     run = None
-    if HAS_WANDB:
+    if HAS_WANDB and args.wandb:
         run = wandb.init(project="imagenet_c", name=args.model, config=args)
 
     device = args.device
@@ -51,7 +51,8 @@ def main(args):
     model = get_normalized_model(args.model)
     model.to(device)
 
-    accs = []
+    global_top1_meter = AverageMeter()
+    global_top5_meter = AverageMeter()
 
     tests = 0
     
@@ -64,8 +65,8 @@ def main(args):
 
             dataloader = get_loader(path=c_path, batch_size=args.batch_size, num_workers=16)
 
-            correct = 0
-            total = 0
+            top1_meter = AverageMeter()
+            top5_meter = AverageMeter()
 
             with torch.no_grad():
 
@@ -77,23 +78,27 @@ def main(args):
                     assert torch.all(bx >= 0) and torch.all(bx <= 1), "Data must be in [0, 1] range"
 
                     logits = model(bx)
-                    is_correct = (logits.argmax(dim=1) == by).detach()
+                    
+                    top1, top5 = accuracy(logits, by, topk=(1, 5))
+                    top1_meter.update(top1.item(), bx.size(0))
+                    top5_meter.update(top5.item(), bx.size(0))
 
-                    correct += is_correct.float().sum().item()
-                    total += len(by)
-
-            acc = (correct / total) * 100
-            accs.append(acc)
+            global_top1_meter.update(top1_meter.avg)
+            global_top5_meter.update(top5_meter.avg)
             
-            print(f"{corruption}/{severity} - {acc:.2f}")
+            print(f"{corruption}/{severity} - top1: {top1_meter.avg:.2f}%, top5: {top5_meter.avg:.2f}%")
             if run:
-                run.log({f"{corruption}/{severity}": acc})
+                run.log(
+                    {
+                        f"top1_acc/{corruption}_{severity}": top1_meter.avg,
+                        f"top5_acc/{corruption}_{severity}": top5_meter.avg,
+                    }
+                )
 
-    mca = sum(accs) / len(accs)
-
-    print(f"Average Accuracy: {mca:.2f}")
+    print(f"Average Accuracy top1: {global_top1_meter.avg:.2f}%, top5: {global_top5_meter.avg:.2f}%")
     if run:
-        run.log({f"mean": mca})
+        run.log({f"top1_mean": global_top1_meter.avg, "top5_mean": global_top5_meter.avg})
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -101,6 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default="cuda")
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
+    parser.add_argument('--wandb', type=str2bool, default=True)
     args = parser.parse_args()
 
     main(args)
