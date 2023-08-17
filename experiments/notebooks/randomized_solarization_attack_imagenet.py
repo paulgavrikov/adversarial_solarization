@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import argparse
 from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, AverageMeter
+from losses import ce_loss, cw_loss
 
 
 def rand_sol_attack(model, bx, by, iterations, target):
@@ -16,19 +17,20 @@ def rand_sol_attack(model, bx, by, iterations, target):
     :param bx: batch of images
     :param by: batch of labels
     :param iterations: number of iterations of the attack
-    :param target: target of the attack, either "top{k}", or "ce_loss"
+    :param target: target of the attack, either "top{k}", or "ce_loss", or "cw_loss"
     :return: logits of the final attack, parameters of the final attack
     """
     assert iterations > 0, "Number of iterations must be greater than 0"
     assert len(bx) == len(by), "Batch size of bx and by must be equal"
-    assert target.startswith("top") or target == "ce_loss", "Target must be either top{k} or ce_loss"
+    assert target.startswith("top") or target in ["ce_loss", "cw_loss"], "Invalid loss"
 
     if target.startswith("top") :
         k = int(target[3:])
         return _rand_sol_attack_accuracy(model=model, bx=bx, by=by, iterations=iterations, k=k)
     elif target == "ce_loss":
-        criterion = torch.nn.CrossEntropyLoss()
-        return _rand_sol_attack_loss(model=model, bx=bx, by=by, iterations=iterations, criterion=criterion)
+        return _rand_sol_attack_loss(model=model, bx=bx, by=by, iterations=iterations, criterion=ce_loss)
+    elif target == "cw_loss":
+        return _rand_sol_attack_loss(model=model, bx=bx, by=by, iterations=iterations, criterion=cw_loss)
     else:
         raise NotImplementedError(f"{target} not supported")
 
