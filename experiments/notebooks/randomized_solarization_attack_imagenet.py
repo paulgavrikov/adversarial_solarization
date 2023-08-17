@@ -5,7 +5,7 @@ import kornia
 from tqdm import tqdm
 import numpy as np
 import argparse
-from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, AverageMeter
+from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, autoselect_device, AverageMeter
 from losses import ce_loss, cw_loss
 
 
@@ -71,10 +71,11 @@ def _rand_sol_attack_loss(model, bx, by, iterations, criterion):
 
 
 def main(args):
-
     seed_everything(args.seed)
     
-    device = args.device
+    device = args.device if args.device is not None else autoselect_device()
+
+    print(f"Using device {device}")
     
     dataloader = get_imagenet_loader(path=args.imagenet, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
@@ -86,7 +87,9 @@ def main(args):
 
     with torch.no_grad():
 
-        for x, y in tqdm(dataloader):
+        progress = tqdm(dataloader, desc=f"RandSol")
+
+        for x, y in progress:
             bx = x.to(device)
             by = y.to(device)
 
@@ -98,6 +101,8 @@ def main(args):
             top1, top5 = accuracy(final_logits, by, topk=(1, 5))
             top1_meter.update(top1.item(), bx.size(0))
             top5_meter.update(top5.item(), bx.size(0))
+
+            progress.set_postfix({"top1": top1_meter.avg, "top5": top5_meter.avg})
         
     print(f"Robust accuracy top1: {top1_meter.avg:.2f}%, top5: {top5_meter.avg:.2f}%")
 
@@ -105,7 +110,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str)
-    parser.add_argument('--device', type=str, default="cuda")
+    parser.add_argument('--device', type=str, default=None)
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
     parser.add_argument('--num_workers', type=int, default=8)

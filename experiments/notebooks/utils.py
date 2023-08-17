@@ -110,3 +110,42 @@ def seed_everything(seed):
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1", "y")
+
+
+def get_gpu_stats():
+    from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
+    
+    nvmlInit()
+    stats = []
+    for i in range(torch.cuda.device_count()):
+        handle = nvmlDeviceGetHandleByIndex(i)
+        info = nvmlDeviceGetMemoryInfo(handle)
+        stats.append(info.used)
+    return stats
+
+
+def autoselect_device():
+    best_is_gpu = False
+
+    device = "cpu"
+
+    try:
+        mps_available = torch.backends.mps.is_available()
+    except:
+        mps_available = False
+
+    if torch.cuda.is_available():
+        best_is_gpu = True
+    elif mps_available:
+        device = "mps"
+    else:
+        device = "cpu"
+
+
+    if best_is_gpu:
+        import numpy as np
+
+        best_device = f"cuda:{np.argmin(get_gpu_stats())}"
+        device = best_device
+
+    return device
