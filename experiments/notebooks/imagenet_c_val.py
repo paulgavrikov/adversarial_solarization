@@ -63,7 +63,7 @@ def main(args):
 
             c_path = os.path.join(args.imagenet, f"{corruption}/{severity}/")
 
-            dataloader = get_loader(path=c_path, batch_size=args.batch_size, num_workers=16)
+            dataloader = get_loader(path=c_path, batch_size=args.batch_size, num_workers=args.num_workers)
 
             top1_meter = AverageMeter()
             top5_meter = AverageMeter()
@@ -106,6 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default="cuda")
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
+    parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--wandb', type=str2bool, default=True)
     args = parser.parse_args()
 
