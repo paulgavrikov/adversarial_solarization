@@ -74,7 +74,7 @@ def main(args):
     
     device = args.device
     
-    dataloader = get_imagenet_loader(path=args.imagenet, batch_size=args.batch_size, num_workers=16, shuffle=False)
+    dataloader = get_imagenet_loader(path=args.imagenet, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
     model = get_normalized_model(args.model)
     model.to(device)
@@ -104,11 +104,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str)
     parser.add_argument('--device', type=str, default="cuda")
-    parser.add_argument('--iterations', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
-    parser.add_argument('--target', type=str, default="top1")
+    parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--seed', type=int, default=0)
+
+    # attack parameters
+    parser.add_argument('--target', type=str, default="top1")
+    parser.add_argument('--iterations', type=int, default=10)
+    
     args = parser.parse_args()
 
     main(args)
