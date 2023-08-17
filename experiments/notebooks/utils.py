@@ -18,7 +18,7 @@ class NormalizedModel(torch.nn.Module):
         return out
 
 
-def get_normalized_model(model_name):
+def get_normalized_model(model_name, eval=True):
     model = None
     if model_name == "alexnet":
         model = torch.hub.load('pytorch/vision:v0.10.0', 'alexnet', pretrained=True)
@@ -41,7 +41,8 @@ def get_normalized_model(model_name):
         model = timm.create_model(model_name, pretrained=True)
         model = NormalizedModel(model, model.default_cfg.get("mean"), model.default_cfg.get("std"))
 
-    model.eval()
+    if eval:
+        model.eval()
     return model
 
 
