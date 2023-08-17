@@ -20,6 +20,8 @@ def rand_sol_attack(model, bx, by, iterations, target, device):
     :param device: device to use
     :return: logits of the final attack, parameters of the final attack
     """
+    assert iterations > 0, "Number of iterations must be greater than 0"
+
     params = torch.empty(len(by))
     is_correct = torch.ones(len(by)).bool().to(device)
 
