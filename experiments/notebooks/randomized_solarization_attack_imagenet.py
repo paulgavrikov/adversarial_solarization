@@ -5,8 +5,14 @@ import kornia
 from tqdm import tqdm
 import numpy as np
 import argparse
-from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, autoselect_device, AverageMeter
+from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, autoselect_device, str2bool, AverageMeter
 from losses import ce_loss, cw_loss
+
+try:
+    import wandb
+    HAS_WANDB = True
+except:
+    HAS_WANDB = False
 
 
 def rand_sol_attack(model, bx, by, iterations, target):
@@ -71,6 +77,11 @@ def _rand_sol_attack_loss(model, bx, by, iterations, criterion):
 
 
 def main(args):
+
+    run = None
+    if HAS_WANDB and args.wandb:
+        run = wandb.init(project="RandSol", name=args.model, config=args)
+
     seed_everything(args.seed)
     
     device = args.device if args.device is not None else autoselect_device()
@@ -105,6 +116,8 @@ def main(args):
             progress.set_postfix({"top1": top1_meter.avg, "top5": top5_meter.avg})
         
     print(f"Robust accuracy top1: {top1_meter.avg:.2f}%, top5: {top5_meter.avg:.2f}%")
+    if run:
+        run.log({f"acc/top1": top1_meter.avg, "acc/top5": top5_meter.avg})
 
 
 if __name__ == '__main__':
@@ -115,6 +128,8 @@ if __name__ == '__main__':
     parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--seed', type=int, default=0)
+
+    parser.add_argument('--wandb', type=str2bool, default=True)
 
     # attack parameters
     parser.add_argument('--target', type=str, default="top1")
