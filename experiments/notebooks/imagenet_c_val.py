@@ -54,14 +54,18 @@ def main(args):
     global_top1_meter = AverageMeter()
     global_top5_meter = AverageMeter()
 
+    selected_corruptions = args.corruptions.split(",") if args.corruptions is not None else CORRUPTIONS
+    selected_severities = args.severities.split(",") if args.severities is not None else SEVERITIES
+
     tests = 0
+    total_tests = len(selected_corruptions) * len(selected_severities)
     
-    for corruption in CORRUPTIONS:
-        for severity in SEVERITIES:
+    for corruption in selected_corruptions:
+        for severity in selected_severities:
 
             tests += 1
 
-            c_path = os.path.join(args.imagenet, f"{corruption}/{severity}/")
+            c_path = os.path.join(args.dataset_path, f"{corruption}/{severity}/")
 
             dataloader = get_loader(path=c_path, batch_size=args.batch_size, num_workers=args.num_workers)
 
@@ -70,7 +74,7 @@ def main(args):
 
             with torch.no_grad():
 
-                for x, y in tqdm(dataloader, desc=f"({tests}/{len(CORRUPTIONS) * len(SEVERITIES)}) {corruption}/{severity}"):
+                for x, y in tqdm(dataloader, desc=f"({tests}/{total_tests}) {corruption}/{severity}"):
                     bx = x.to(device)
                     by = y.to(device)
 
@@ -94,7 +98,7 @@ def main(args):
                         f"top5_acc/{corruption}_{severity}": top5_meter.avg,
                     }
                 )
-
+    
     print(f"Average Accuracy top1: {global_top1_meter.avg:.2f}%, top5: {global_top5_meter.avg:.2f}%")
     if run:
         run.log({f"top1_mean": global_top1_meter.avg, "top5_mean": global_top5_meter.avg})
@@ -105,9 +109,14 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str)
     parser.add_argument('--device', type=str, default="cuda")
     parser.add_argument('--batch_size', type=int, default=512)
-    parser.add_argument('--imagenet', type=str, default="/home/SSD/ImageNet/")
+    parser.add_argument('--dataset_path', type=str, default="/workspace/data/datasets/imagenet_c")
     parser.add_argument('--num_workers', type=int, default=8)
-    parser.add_argument('--wandb', type=str2bool, default=True)
+    parser.add_argument('--wandb', type=str2bool, default=False)
+
+    # corruption parameters
+    parser.add_argument('--corruptions', type=str, default=None)
+    parser.add_argument('--severities', type=str, default=None)
+
     args = parser.parse_args()
 
     main(args)
