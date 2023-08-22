@@ -1,4 +1,4 @@
-# Don't look into the sun: Adversarial Solarization Attacks on Image Classifiers
+# Don't Look into the Sun: <br> Adversarial Solarization Attacks on Image Classifiers
 Paul Gavrikov, Janis Keuper
 
 [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
