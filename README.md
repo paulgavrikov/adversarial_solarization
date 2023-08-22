@@ -27,7 +27,7 @@ We provide code to evaluate our attack (RandSol) against ImageNet models loaded 
 ```bash
 python randsol.py --imagenet <PATH TO IMAGENET> --model resnet50 --target top1 --iterations 10
 ```
-`--target` refers to the attack target and can be `top1` (effective against top1 but less on top5) or `top5` (effective against top5 at some reduction in top-1 error).
+`--target` refers to the attack target and can be `top1` (effective in increasing top-1 error but less on top-5) or `top5` (effective in increasing top-5 error at some reduction in top-1 error).
 `--iterations` defines the number of iterations to run per batch. The more iterations the more effective the attack will be at the cost of a longer runtime.
 The attack will autoselect the least busy and best device, but you can enforce this, e.g., `--device cuda:0`
 
