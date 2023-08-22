@@ -1,14 +1,16 @@
-# [Paper Title]
-[Author 1, Author 2, ...]
+# Don't look into the sun: Adversarial Solarization Attacks on Image Classifiers
+Paul Gavrikov, Janis Keuper
 
 [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
 
-Presented at: [Conference]
+<!-- Presented at: [Conference] -->
 
-[Paper]() | [ArXiv]() | [HQ Poster]() | [Talk]()
+<!-- [Paper]() | -->
+[ArXiv]() 
+<!-- Presented at: | [HQ Poster]() | [Talk]() -->
 
 
-Abstract: *[Abstract]*
+Abstract: *Assessing the robustness of deep neural networks against out-of-distribution inputs is crucial, especially in safety-critical domains like medical imaging, autonomous driving, and for defenses such as spam detectors. However, designing effective out-of-distribution tests that encompass diverse scenarios while preserving accurate label prediction is a challenging task. Existing methodologies often entail a compromise between variety and constraint levels for attacks and sometimes even both. In a first step towards a more holistic robustness evaluation of image classification models, we introduce an attack method based on image solarization that is conceptually straightforward yet avoids jeopardizing the global structure of natural images independent of the intensity. Through comprehensive evaluations on multiple ImageNet models, we demonstrate the attack's capacity to degrade accuracy significantly, provided it is not integrated into the training augmentations. Interestingly, even incorporating the attack into training augmentations does not offer full immunity to accuracy deterioration. In other settings, the attack can often be constrained into a black-box attack with model-independent parameters. Defenses against other corruptions do not consistently extend to be effective against our specific attack.*
 
 
 [cc-by-sa]: http://creativecommons.org/licenses/by-sa/4.0/
@@ -18,8 +20,19 @@ Abstract: *[Abstract]*
 ![Hero Image]()
 
 
-## Reproduce our results
+## Use the attack
 
+We provide code to evaluate our attack (RandSol) against ImageNet models loaded via *timm* (and some others) via PyTorch. Note that you must have ImageNet available on your system. Models must accept inputs in the [0, 1] range with (B, C, W, H) order - the code takes care of this when loading models from predefined sources. If you implement a different model source consider using the `NormalizedModel` class defined in `utils.py`.
+
+```bash
+python randsol.py --imagenet <PATH TO IMAGENET> --model resnet50 --target top1 --iterations 10
+```
+`--target` refers to the attack target and can be `top1` (effective against top1 but less on top5) or `top5` (effective against top5 at some reduction in top-1 error).
+`--iterations` defines the number of iterations to run per batch. The more iterations the more effective the attack will be at the cost of a longer runtime.
+The attack will autoselect the least busy and best device, but you can enforce this, e.g., `--device cuda:0`
+
+
+This attack can be easily migrated to other datasets, by adding a different dataset loader in `utils.py`.
 
 ## Citation 
 
