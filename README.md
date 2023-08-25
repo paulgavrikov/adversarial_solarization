@@ -6,7 +6,7 @@ Paul Gavrikov, Janis Keuper
 <!-- Presented at: [Conference] -->
 
 <!-- [Paper]() | -->
-[ArXiv]() 
+[ArXiv](https://arxiv.org/abs/2308.12661) 
 <!-- Presented at: | [HQ Poster]() | [Talk]() -->
 
 
@@ -39,7 +39,14 @@ This attack can be easily migrated to other datasets, by adding a different data
 If you find our work useful in your research, please consider citing:
 
 ```
-
+@misc{gavrikov2023dont,
+      title={Don't Look into the Sun: Adversarial Solarization Attacks on Image Classifiers}, 
+      author={Paul Gavrikov and Janis Keuper},
+      year={2023},
+      eprint={2308.12661},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
 ```
 
 ### Legal
