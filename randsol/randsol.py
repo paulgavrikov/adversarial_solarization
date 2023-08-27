@@ -6,7 +6,6 @@ from tqdm import tqdm
 import numpy as np
 import argparse
 from utils import get_normalized_model, get_imagenet_loader, accuracy, seed_everything, autoselect_device, str2bool, AverageMeter
-from losses import ce_loss, cw_loss
 
 try:
     import wandb
@@ -23,20 +22,15 @@ def rand_sol_attack(model, bx, by, iterations, target):
     :param bx: batch of images
     :param by: batch of labels
     :param iterations: number of iterations of the attack
-    :param target: target of the attack, either "top{k}", or "ce_loss", or "cw_loss"
+    :param target: target of the attack "top{k}" for any k > 0
     :return: logits of the final attack, parameters of the final attack
     """
     assert iterations > 0, "Number of iterations must be greater than 0"
     assert len(bx) == len(by), "Batch size of bx and by must be equal"
-    assert target.startswith("top") or target in ["ce_loss", "cw_loss"], "Invalid loss"
 
     if target.startswith("top") :
         k = int(target[3:])
         return _rand_sol_attack_accuracy(model=model, bx=bx, by=by, iterations=iterations, k=k)
-    elif target == "ce_loss":
-        return _rand_sol_attack_loss(model=model, bx=bx, by=by, iterations=iterations, criterion=ce_loss)
-    elif target == "cw_loss":
-        return _rand_sol_attack_loss(model=model, bx=bx, by=by, iterations=iterations, criterion=cw_loss)
     else:
         raise NotImplementedError(f"{target} not supported")
 
@@ -56,22 +50,6 @@ def _rand_sol_attack_accuracy(model, bx, by, iterations, k):
         k_correct = pred.eq(by.cpu().view(1, -1).expand_as(pred))
 
         is_correct.data = k_correct[:k].float().max(0).values.bool().detach()
-        
-    return logits, params
-
-
-def _rand_sol_attack_loss(model, bx, by, iterations, criterion):
-    params = torch.ones(len(by)).float()
-    loss = torch.zeros(len(by))
-
-    for _ in range(iterations):
-        new_params = torch.tensor(np.random.uniform(0, 1, len(by))).float()
-
-        x_aug = kornia.enhance.solarize(bx, new_params)
-        logits = model(x_aug)
-        new_loss = criterion(logits, by).detach().cpu()
-
-        params.data[loss < new_loss] = new_params[loss < new_loss].detach()
         
     return logits, params
 
