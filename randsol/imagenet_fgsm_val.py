@@ -3,7 +3,7 @@ import torch.utils.data
 from tqdm import tqdm
 import argparse
 from utils import get_normalized_model, get_imagenet_loader, accuracy, AverageMeter
-from losses import ce_loss, cw_loss
+
 
 def fgsm_attack(model, bx, by, eps, criterion):
     """
@@ -25,13 +25,7 @@ def main(args):
 
     device = args.device
 
-    criterion = None
-    if args.loss == "ce":
-        criterion = ce_loss
-    elif args.loss == "cw":
-        criterion = cw_loss
-    else:
-        raise ValueError(f"Unknown loss {args.loss}")
+    criterion = torch.nn.CrossEntropyLoss()
     
     dataloader = get_imagenet_loader(path=args.imagenet, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
@@ -67,7 +61,6 @@ if __name__ == '__main__':
 
     # attack parameter
     parser.add_argument('--eps', type=float, default=4/255)
-    parser.add_argument('--loss', type=str, default="ce", choices=["ce", "cw"])
 
     args = parser.parse_args()
 
