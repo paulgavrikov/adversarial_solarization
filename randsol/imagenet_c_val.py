@@ -28,7 +28,8 @@ def get_loader(path, batch_size, num_workers):
     dataset = torchvision.datasets.ImageFolder(path, 
                                                 transform=torchvision.transforms.Compose(
                                                     [
-                                                        torchvision.transforms.Resize(256), # Hendrycks et al. did not resize
+                                                        # techically, we should not resize, but this is how Hendrycks et al. do it
+                                                        torchvision.transforms.Resize(256),
                                                         torchvision.transforms.CenterCrop(224), 
                                                         torchvision.transforms.ToTensor()
                                                     ]
